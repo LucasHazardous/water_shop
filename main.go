@@ -1,5 +1,10 @@
 package main
 
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 type water struct {
 	Id     int    `json:"id"`
@@ -15,6 +20,12 @@ var water_menu = []water{
 	{Id: 1, Name: "Big Chungus Drink", Origin: "Japan", Type: "sparkling", Price: 20, Amount: 5},
 }
 
-func main() {
+func getWaterMenu(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, water_menu)
+}
 
+func main() {
+	router := gin.Default()
+	router.GET("/menu", getWaterMenu)
+	router.Run("localhost:8080")
 }
