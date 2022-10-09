@@ -17,9 +17,19 @@ type water struct {
 	Amount int    `json:"amount"`
 }
 
+type water_request struct {
+	Name   string `json:"name"`
+	Origin string `json:"origin"`
+	Type   string `json:"type"`
+}
+
 var water_menu = []water{
 	{Id: 0, Name: "Giga Chad Water", Origin: "Fiji", Type: "mineral", Price: 7, Amount: 10},
 	{Id: 1, Name: "Big Chungus Drink", Origin: "Japan", Type: "sparkling", Price: 20, Amount: 5},
+}
+
+var water_menu_requests = []water_request{
+	{Name: "Epic Water", Origin: "Canada", Type: "rain"},
 }
 
 func getWaterMenu(c *gin.Context) {
