@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,8 +26,78 @@ func getWaterMenu(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, water_menu)
 }
 
+func waterById(id int) (*water, error) {
+	for i, w := range water_menu {
+		if w.Id == id {
+			return &water_menu[i], nil
+		}
+	}
+
+	return nil, errors.New("water not found")
+}
+
+func getWaterByIdWithRequestCheck(c *gin.Context) (*water, error) {
+	id, ok := c.GetQuery("id")
+	operationFailed := errors.New("operation failed")
+
+	if !ok {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Missing query"})
+		return nil, operationFailed
+	}
+
+	intId, err := strconv.Atoi(id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Bad query value"})
+		return nil, operationFailed
+	}
+
+	foundWater, err := waterById(intId)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Water not found"})
+		return nil, operationFailed
+	}
+
+	return foundWater, nil
+}
+
+func buyWater(c *gin.Context) {
+	foundWater, err := getWaterByIdWithRequestCheck(c)
+
+	if err != nil {
+		return
+	}
+
+	if foundWater.Amount <= 0 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "This water is out of stock"})
+		return
+	}
+
+	foundWater.Amount--
+	c.IndentedJSON(http.StatusOK, foundWater)
+}
+
+func giveWater(c *gin.Context) {
+	foundWater, err := getWaterByIdWithRequestCheck(c)
+
+	if err != nil {
+		return
+	}
+
+	if foundWater.Amount >= 10 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Magazine is full"})
+		return
+	}
+
+	foundWater.Amount++
+	c.IndentedJSON(http.StatusOK, foundWater)
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/menu", getWaterMenu)
+	router.PATCH("/buy", buyWater)
+	router.PATCH("/give", giveWater)
 	router.Run("localhost:8080")
 }
