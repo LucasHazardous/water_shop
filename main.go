@@ -124,6 +124,23 @@ func patchGiveWater(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, foundWater)
 }
 
+func postWaterRequest(c *gin.Context) {
+	var newWaterRequest water_request
+
+	if err := c.BindJSON(&newWaterRequest); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Bad water request"})
+		return
+	}
+
+	if len(water_menu_requests)+1 > 2 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Too many water requests"})
+		return
+	}
+
+	water_menu_requests = append(water_menu_requests, newWaterRequest)
+	c.IndentedJSON(http.StatusCreated, newWaterRequest)
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/menu", getWaterMenu)
@@ -132,6 +149,8 @@ func main() {
 
 	router.PATCH("/buy", patchBuyWater)
 	router.PATCH("/give", patchGiveWater)
+
+	router.POST("/request", postWaterRequest)
 
 	router.Run("localhost:8080")
 }
