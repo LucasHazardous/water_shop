@@ -36,7 +36,27 @@ func waterById(id int) (*water, error) {
 	return nil, errors.New("water not found")
 }
 
-func getWaterByIdWithRequestCheck(c *gin.Context) (*water, error) {
+func getWaterById(c *gin.Context) {
+	id := c.Param("id")
+
+	intId, err := strconv.Atoi(id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Bad query value"})
+		return
+	}
+
+	foundWater, err := waterById(intId)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Water not found"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, foundWater)
+}
+
+func waterByIdWithRequestCheck(c *gin.Context) (*water, error) {
 	id, ok := c.GetQuery("id")
 	operationFailed := errors.New("operation failed")
 
@@ -62,8 +82,8 @@ func getWaterByIdWithRequestCheck(c *gin.Context) (*water, error) {
 	return foundWater, nil
 }
 
-func buyWater(c *gin.Context) {
-	foundWater, err := getWaterByIdWithRequestCheck(c)
+func patchBuyWater(c *gin.Context) {
+	foundWater, err := waterByIdWithRequestCheck(c)
 
 	if err != nil {
 		return
@@ -78,8 +98,8 @@ func buyWater(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, foundWater)
 }
 
-func giveWater(c *gin.Context) {
-	foundWater, err := getWaterByIdWithRequestCheck(c)
+func patchGiveWater(c *gin.Context) {
+	foundWater, err := waterByIdWithRequestCheck(c)
 
 	if err != nil {
 		return
@@ -97,7 +117,11 @@ func giveWater(c *gin.Context) {
 func main() {
 	router := gin.Default()
 	router.GET("/menu", getWaterMenu)
-	router.PATCH("/buy", buyWater)
-	router.PATCH("/give", giveWater)
+
+	router.GET("/water/:id", getWaterById)
+
+	router.PATCH("/buy", patchBuyWater)
+	router.PATCH("/give", patchGiveWater)
+
 	router.Run("localhost:8080")
 }
